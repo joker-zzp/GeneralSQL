@@ -1,5 +1,5 @@
 from .base.my_sql import Run_Sql
-import Error
+from .. import Error
 
 class Select(Run_Sql):
     """ Query SQL statement format.
@@ -30,7 +30,7 @@ class Select(Run_Sql):
         return sql
 
     def format_field(self, field):
-        col = []
+        # col = []
         if isinstance(field, dict):
             for k, v in dict(field).items():
                 tmp = k.split('__', 1)
@@ -39,8 +39,8 @@ class Select(Run_Sql):
                 else:
                     self.field.append(f'`{k}` AS `{v}`' if v else f'`{k}`')
         elif isinstance(field, tuple):
-            col = list(field)
-            return col
+            self.field = list(field)
+            return self.field
         else:
             raise Error.ParamMiss('field')
     
@@ -48,16 +48,16 @@ class Select(Run_Sql):
         self.field = field
 
     # 获取结果
-    def get_result(self, format = 'json'):
+    def get_result(self, format = 'dict'):
         """ Get result data
 
         Args:
-            format: 'json' Set get data format to 'JSON' by default
+            format: 'dict' Set get data format to 'Dict' by default
 
         Returns:
-            Return result set, 'json' or 'template' format.
+            Return result set, 'dict' or 'template' format.
         """
         if format == 'template':
             return Run_Sql.get_template_data(self)
-        elif format == 'json':
+        elif format == 'dict':
             return Run_Sql.get_format_data(self)

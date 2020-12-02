@@ -1,5 +1,5 @@
 from .base.my_sql import Run_Sql
-import Error
+from .. import Error
 
 class Insert(Run_Sql):
     
@@ -66,6 +66,14 @@ class Insert(Run_Sql):
             return self.sql_list
         else: raise Error.ParamTypeNotSupported(self.data)
 
-    def get_Insert_data(self):
+    def get_sql_list(self):
+        return self.sql_list
+
+    def get_insert_data(self):
+        count = 0
         for i in self.sql_list:
-            print(i)
+            self.set_sql(i)
+            # print(self.get_sql())
+            self.get_data()
+            count += self.get_format_data()['count']
+        return count

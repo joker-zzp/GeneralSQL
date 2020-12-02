@@ -1,6 +1,6 @@
 from datetime import datetime
 import mysql.connector
-import Error
+from ... import Error
 
 class Sql(object):
 
@@ -26,7 +26,7 @@ class Sql(object):
 
     # 检查SQL类型
     def check_sql(self) -> str:
-        type_dic = {'select': 'query', 'show': 'query', 'field': 'query', 'insert': 'affairs', 'update': 'affairs', 'delete': 'affairs'}
+        type_dic = {'select': 'query', 'show': 'query', 'field': 'query', 'desc': 'query', 'insert': 'affairs', 'update': 'affairs', 'delete': 'affairs'}
         sql_type = lambda x: type_dic.get(x) if type_dic.get(x) else ''
         self.__type =  sql_type(self.__value.split()[0].lower())
         if not self.__type:
@@ -50,8 +50,8 @@ class Run_Sql(Sql):
     # 设置 数据库连接参数
     def set_db_info(self, **kwargs):
         if kwargs:
-            if 'username' in kwargs.keys():
-                self.__DB_Info__['user'] = kwargs['username']
+            if 'user' in kwargs.keys():
+                self.__DB_Info__['user'] = kwargs['user']
             else:
                 raise Error.ParamMiss(self, 'user')
             if 'password' in kwargs.keys():
@@ -68,9 +68,7 @@ class Run_Sql(Sql):
             raise Error.ParamMiss(self,['database', 'user', 'password'])
         # test connect
         try:
-            print('-- 测试连接 -- {host}:{port} -- ({database}) 数据库 帐号: {user} 密码: {passwd}'.format(**self.__DB_Info__))
             self.__db = mysql.connector.connect(**self.__DB_Info__)
-            print('-- is ojbk !')
             return 1
         except Exception as e:
             print(e)
@@ -85,6 +83,7 @@ class Run_Sql(Sql):
             self.__data['count'] = 0
             raise Error.CommitErr(*e.args)
 
+    # 回滚 roolback
     def rollback(self):
         try:
             self.__db.rollback()
@@ -147,9 +146,7 @@ class Run_Sql(Sql):
     # Format data to list[dict]
     def __format_data(self) -> list:
         init_data = []
-        # print(self.__data)
         key = [i for i in self.__data['field']]
-        print('key',key)
         for i in self.__data['data']:
             one_data = {}
             for f in range(len(key)):

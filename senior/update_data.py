@@ -9,7 +9,7 @@ class Update(Run_Sql):
         self.data_list = []
 
     def set_data(self, data):
-        f_data = lambda k, v: f'{k}="{v}"'
+        f_data = lambda k, v: f'{k}={v}' if isinstance(v, str) and v.upper() == 'NULL' else f'{k}="{v}"'
         self.data_list = [f_data(k, v) for k, v in data.items()]
         return self.data_list
 
