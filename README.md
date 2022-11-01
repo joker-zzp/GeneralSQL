@@ -163,3 +163,4 @@ print(sql.get_sql())
 # >>> SELECT u.`name` AS `name`,u.`age` AS `age`,c.`name` AS `class_name` FROM user u JOIN class c ON c.`class_id` = u.id
 
 ```
+
