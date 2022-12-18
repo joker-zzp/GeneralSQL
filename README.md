@@ -8,7 +8,7 @@ Sql 生成器工具
 
 已支持数据库
 
-- mysql
+- mysql 安装 `pip install mysql-connector`
 
 
 ## 使用示例
