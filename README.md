@@ -12,7 +12,7 @@ Sql 生成器工具
 
 ## 使用示例
 
-- [mysql, mariadb](./doc/mysql.md)
+- [mysql, mariadb](https://github.com/joker-zzp/GeneralSQL/blob/master/doc/mysql.md)
 
 ## 各种方法详细使用设计
 
