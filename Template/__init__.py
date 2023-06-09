@@ -19,7 +19,7 @@ class TInsert(JI, Sql):
         self.data = data
 
     def data_decode(self): raise NotImplementedError
-    
+
     def format_sql(self): raise NotImplementedError
 
 class TUpdate(JU, Sql):

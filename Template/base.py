@@ -69,7 +69,7 @@ class Sql:
     """
 
     def __init__(self):
-        # type: query/affairs
+        # type: query/ affairs
         self.__type = None
         self.__value = None
 

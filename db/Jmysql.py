@@ -53,11 +53,11 @@ def _filter_format(filter_data:dict) -> str:
             if symbol.upper() == 'IN':
                 if filter_data.get('not'):
                     symbol = 'NOT IN'
-                result = f"{field} {symbol} ({','.join([str(i) for i in val])})"
+                result = f"{field} {symbol} ({','.join([repr(str(i)) for i in val])})"
             elif symbol.upper() == 'LIKE':
                 if filter_data.get('not'):
                     symbol = 'NOT LIKE'
-                result = f"{field} {symbol} {str(val)}"
+                result = f"{field} {symbol} {repr(str(val))}"
             elif symbol.upper() == 'ISNULL':
                 symbol = 'IS NULL'
                 if filter_data.get('not'):
@@ -66,12 +66,12 @@ def _filter_format(filter_data:dict) -> str:
             elif symbol.upper() == 'BETWEEN':
                 if filter_data.get('not'):
                     symbol = 'NOT BETWEEN'
-                result = f"{field} {symbol} {val.get('start')} AND {val.get('end')}"
+                result = f'{field} {symbol} {repr(val.get("start"))} AND {repr(val.get("end"))}'
                 if filter_data.get('not'):
-                    symbol = 'NOT LIKE'
-                result = f'{field} {symbol} {str(val)}'
+                    symbol = 'NOT BETWEEN'
+                result = f'{field} {symbol} {repr(val.get("start"))} AND {repr(val.get("end"))}'
             else:
-                result = f'{field} {symbol} {val}'
+                result = f'{field} {symbol} {repr(val)}'
                 if filter_data.get('not'):
                     result = f'NOT {result}'
             # 关系
@@ -232,6 +232,15 @@ class Update(TUpdate):
         else:
             raise Error.UseError(200002)
 
+    def set_where(self, *filters):
+        if len(filters) > 0:
+            self.where = []
+            for i in filters:
+                self.where.append(_filter_format(i))
+            self.where = f'WHERE {" ".join(self.where)}'
+        else:
+            raise Error.ParamsError(400002)
+
     def format_sql(self):
         self.data_decode()
         str_data = ','.join(self.value)
@@ -240,27 +249,12 @@ class Update(TUpdate):
             sql = f'{sql} {self.where}'
         self.set_sql(sql)
 
-    def set_where(self, *filters):
-        if len(filters) > 0:
-            self.where = []
-            for i in filters:
-                self.where.append(_filter_format(i))
-            self.where = f'WHERE {" ".join(self.where)}'
-        else:
-            raise Error.ParamsError(400002)
-
 class Delete(TDelete):
 
     def __init__(self, table):
         TDelete.__init__(self, table)
         self.__base = ['DELETE FROM']
 
-    def format_sql(self):
-        sql = f'{self.__base[0]} {self.table}'
-        if self.where:
-            sql = f'{sql} {self.where}'
-        self.set_sql(sql)
-
     def set_where(self, *filters):
         if len(filters) > 0:
             self.where = []
@@ -269,6 +263,12 @@ class Delete(TDelete):
             self.where = f'WHERE {" ".join(self.where)}'
         else:
             raise Error.ParamsError(400002)
+
+    def format_sql(self):
+        sql = f'{self.__base[0]} {self.table}'
+        if self.where:
+            sql = f'{sql} {self.where}'
+        self.set_sql(sql)
 
 class Select(TSelect):
 
@@ -286,7 +286,6 @@ class Select(TSelect):
             raise Error.ParamsError(400002)
         for i in fields:
             self.fields = _format_field(i)
-
 
     # 设置条件
     def set_where(self, *filters):
