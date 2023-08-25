@@ -31,7 +31,7 @@ def _format_field(field):
             else:
                 res.append(f'`{k}` AS `{v}`' if v else f'`{k}`')
     elif isinstance(field, (tuple, list)):
-        res = list(field)
+        res = [f'`{i}`' for i in list(field)]
     else:
         raise Error.ParamsError(400001)
     return res
@@ -128,7 +128,7 @@ class DB(TDB):
                 try:
                     dbcursor.execute(value)
                 except Exception as e:
-                    print(e)
+                    raise Error.RunSqlError(100020, e)
                 else:
                     sql.data = {
                         'field': dbcursor.column_names,
@@ -140,25 +140,24 @@ class DB(TDB):
                         try:
                             dbcursor.execute(i)
                         except Exception as e:
-                            print(e)
+                            raise Error.RunSqlError(100020, e)
                 else:
                     try:
                         dbcursor.execute(value)
                     except Exception as e:
-                        print(e)
+                        raise Error.RunSqlError(100020, e)
 
     def commit(self):
         try:
             self.__db.commit()
         except Exception as e:
-            print(e)
-            raise Error.CommitError(100022)
+            raise Error.CommitError(100022, e)
 
     def rollback(self):
         try:
             self.__db.rollback()
         except Exception as e:
-            raise Error.RollbackError(100023)
+            raise Error.RollbackError(100023, e)
 
     def connect(self):
         # 检查 配置 初始化 通过
