@@ -185,7 +185,8 @@ class Insert(TInsert):
             self.fields = list(data.keys())
         elif isinstance(data, list) and  len(data) > 0:
             if isinstance(data[0], dict):
-                self.fields = list(data[0].keys())
+                # fixbug 当数据为列表时 有些数据有的字段没有时会丢失字段
+                self.fields = list(set.union(*[set(i.keys()) for i in data]))
             else:
                 Error.ParamsError(400001)
         else:
