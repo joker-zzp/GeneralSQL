@@ -197,7 +197,8 @@ class Insert(TInsert):
     def data_decode(self, data = None):
         if isinstance(self.data, dict) or data:
             data:dict = data if data else self.data
-            data_list = [repr(data.get(i)) if i in data.keys() else 'NULL' for i in self.fields]
+            # 循环 字段列表 数据中 不存在此key 并且 这个key的值不是 None 时 为这个值的数据 否则 为 null 关键字
+            data_list = [repr(data.get(i)) if i in data.keys() and data.get(i) != None else 'NULL' for i in self.fields]
             self.values.append(f"({','.join(data_list)})")
         else:
             if isinstance(self.data, list):
