@@ -212,7 +212,8 @@ class Insert(TInsert):
         res = []
         field = ','.join([f'`{i}`' for i in self.fields])
         for i in range(0, len(self.values), self.val_max):
-            tmp = self.values[i: i * self.val_max + self.val_max]
+            # 0:5, 5:10, 10:15 ...
+            tmp = self.values[i: i * + self.val_max]
             res.append(f"{self.__base[0]} {self.table} ({field}) {self.__base[1]} {','.join(tmp)}")
         self.set_sql(res)
 
