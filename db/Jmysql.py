@@ -40,9 +40,9 @@ def _filter_format(filter_data:dict) -> str:
     # 检查
     if set(filter_data.keys()) >= set(['symbol', 'field', 'value']):
         # check symbol
-        field, val = f"`{filter_data.get('field')}`", filter_data.get('value')
+        field, val = f"{filter_data.get('field')}", filter_data.get('value')
         symbol = filter_data.get('symbol')
-    
+
         symbol_list = ['=', '<=', '>=', '!=', '<>', '<', '>', 'IN', 'LIKE', 'BETWEEN', 'ISNULL']
         if symbol.upper() in symbol_list:
             result = ''
@@ -57,7 +57,7 @@ def _filter_format(filter_data:dict) -> str:
             elif symbol.upper() == 'LIKE':
                 if filter_data.get('not'):
                     symbol = 'NOT LIKE'
-                result = f"{field} {symbol} {repr(str(val))}"
+                result = f"{field} {symbol} {repr(f'%{str(val)}%')}"
             elif symbol.upper() == 'ISNULL':
                 symbol = 'IS NULL'
                 if filter_data.get('not'):
@@ -373,10 +373,16 @@ class Select(TSelect):
                     obj['keyword'] = 'JOIN'
                 else:
                     raise Error.ParamsError(400003)
-                if 'sql' in join_obj:
-                    tmp.append(f"{str(obj['keyword'])} ({str(obj['sql'])}) {str(obj['table_as'])} ON {str(obj['table_as'])}.`{obj['col_key']}` = {str(obj['col_value'])}")
+                if obj.get('on'):
+                    if 'sql' in join_obj:
+                        tmp.append(f"{str(obj['keyword'])} ({str(obj['sql'])}) {str(obj['table_as'])} ON {' '.join(obj['on'])}")
+                    else:
+                        tmp.append(f"{str(obj['keyword'])} {str(obj['table'])} {str(obj['table_as'])} ON {' '.join(obj['on'])}")
                 else:
-                    tmp.append(f"{str(obj['keyword'])} {str(obj['table'])} {str(obj['table_as'])} ON {str(obj['table_as'])}.`{obj['col_key']}` = {str(obj['col_value'])}")
+                    if 'sql' in join_obj:
+                        tmp.append(f"{str(obj['keyword'])} ({str(obj['sql'])}) {str(obj['table_as'])} ON {str(obj['table_as'])}.`{obj['col_key']}` = {str(obj['col_value'])}")
+                    else:
+                        tmp.append(f"{str(obj['keyword'])} {str(obj['table'])} {str(obj['table_as'])} ON {str(obj['table_as'])}.`{obj['col_key']}` = {str(obj['col_value'])}")
         else:
             raise Error.ParamsError(400002)
         if tmp:

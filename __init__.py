@@ -2,7 +2,7 @@ import importlib
 import functools
 from . import db
 
-__version__ = '1.0.9'
+__version__ = '1.1.1'
 
 __cls__ = db.__all__
 
