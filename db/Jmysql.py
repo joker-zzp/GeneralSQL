@@ -57,7 +57,7 @@ def _filter_format(filter_data:dict) -> str:
             elif symbol.upper() == 'LIKE':
                 if filter_data.get('not'):
                     symbol = 'NOT LIKE'
-                result = f"{field} {symbol} {repr(f'%{str(val)}%')}"
+                result = f"{field} {symbol} {repr(f'{str(val)}')}"
             elif symbol.upper() == 'ISNULL':
                 symbol = 'IS NULL'
                 if filter_data.get('not'):
