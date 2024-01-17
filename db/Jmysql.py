@@ -27,7 +27,10 @@ def _format_field(field):
         for k, v in dict(field).items():
             tmp = k.split('__', 1)
             if len(tmp) == 2:
-                res.append(f'{tmp[0]}.`{tmp[1]}` AS `{v}`' if v else f'{tmp[0]}.`{tmp[1]}`')
+                if tmp[0]:
+                    res.append(f'{tmp[0]}.`{tmp[1]}` AS `{v}`' if v else f'{tmp[0]}.`{tmp[1]}`')
+                else:
+                    res.append(f'{tmp[1]} AS `{v}`' if v else f'`{tmp[1]}`')
             else:
                 res.append(f'`{k}` AS `{v}`' if v else f'`{k}`')
     elif isinstance(field, (tuple, list)):
@@ -228,7 +231,7 @@ class Update(TUpdate):
     def data_decode(self):
         if hasattr(self, 'data'):
             if isinstance(self.data, dict):
-                self.value = [f'`{k}` = {repr(v)}' for k, v in self.data.items()]
+                self.value = [f'`{k}` = {v}' for k, v in self.data.items()]
             else:
                 raise Error.ParamsError(400001)
         else:
