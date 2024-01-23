@@ -32,7 +32,8 @@ def _format_field(field):
                 else:
                     res.append(f'{tmp[1]} AS `{v}`' if v else f'`{tmp[1]}`')
             else:
-                res.append(f'`{k}` AS `{v}`' if v else f'`{k}`')
+                # key 支持方法 去掉``包裹
+                res.append(f'{k} AS `{v}`' if v else f'`{k}`')
     elif isinstance(field, (tuple, list)):
         res = [f'`{i}`' for i in list(field)]
     else:
@@ -368,24 +369,25 @@ class Select(TSelect):
         tmp = []
         if join_obj:
             for obj in join_obj:
+                mod = None
                 if obj.get('keyword').lower() == 'left':
-                    obj['keyword'] = 'LEFT JOIN'
+                    mod = 'LEFT JOIN'
                 elif obj.get('keyword').lower() == 'right':
-                    obj['keyword'] = 'RIGHT JOIN'
+                    mod = 'RIGHT JOIN'
                 elif obj.get('keyword').lower() == 'join':
-                    obj['keyword'] = 'JOIN'
+                    mod = 'JOIN'
                 else:
-                    raise Error.ParamsError(400003)
+                    raise Error.ParamsError(400003, 'keyword not in ["join", "left", "right"]')
                 if obj.get('on'):
                     if 'sql' in join_obj:
-                        tmp.append(f"{str(obj['keyword'])} ({str(obj['sql'])}) {str(obj['table_as'])} ON {' '.join(obj['on'])}")
+                        tmp.append(f"{mod} ({str(obj['sql'])}) {str(obj['table_as'])} ON {' '.join(obj['on'])}")
                     else:
-                        tmp.append(f"{str(obj['keyword'])} {str(obj['table'])} {str(obj['table_as'])} ON {' '.join(obj['on'])}")
+                        tmp.append(f"{mod} {str(obj['table'])} {str(obj['table_as'])} ON {' '.join(obj['on'])}")
                 else:
                     if 'sql' in join_obj:
-                        tmp.append(f"{str(obj['keyword'])} ({str(obj['sql'])}) {str(obj['table_as'])} ON {str(obj['table_as'])}.`{obj['col_key']}` = {str(obj['col_value'])}")
+                        tmp.append(f"{mod} ({str(obj['sql'])}) {str(obj['table_as'])} ON {str(obj['table_as'])}.`{obj['col_key']}` = {str(obj['col_value'])}")
                     else:
-                        tmp.append(f"{str(obj['keyword'])} {str(obj['table'])} {str(obj['table_as'])} ON {str(obj['table_as'])}.`{obj['col_key']}` = {str(obj['col_value'])}")
+                        tmp.append(f"{mod} {str(obj['table'])} {str(obj['table_as'])} ON {str(obj['table_as'])}.`{obj['col_key']}` = {str(obj['col_value'])}")
         else:
             raise Error.ParamsError(400002)
         if tmp:
