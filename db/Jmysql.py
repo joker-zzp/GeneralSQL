@@ -183,7 +183,7 @@ class DB(TDB):
 
 class Insert(TInsert):
 
-    def __init__(self, table, data):
+    def __init__(self, table, data, update = False):
         TInsert.__init__(self, table, data)
         if isinstance(data, dict):
             self.fields = list(data.keys())
@@ -195,9 +195,10 @@ class Insert(TInsert):
                 Error.ParamsError(400001)
         else:
             Error.ParamsError(400001)
-        self.__base = ['INSERT INTO', 'VALUES']
+        self.__base = ['INSERT INTO', 'VALUES', 'ON DUPLICATE KEY UPDATE']
         self.val_max = 5
         self.values = []
+        self.update = update
 
     def data_decode(self, data = None):
         if isinstance(self.data, dict) or data:
@@ -217,10 +218,15 @@ class Insert(TInsert):
             self.data_decode()
         res = []
         field = ','.join([f'`{i}`' for i in self.fields])
+        format_update = [f'{i}={self.__base[1]}({i})' for i in self.fields]
         for i in range(0, len(self.values), self.val_max):
             # 0:5, 5:10, 10:15 ...
             tmp = self.values[i: i + self.val_max]
-            res.append(f"{self.__base[0]} {self.table} ({field}) {self.__base[1]} {','.join(tmp)}")
+            if self.update:
+                # 重复更新
+                res.append(f"{self.__base[0]} {self.table} ({field}) {self.__base[1]} {','.join(tmp)} {self.__base[2]} {','.join(format_update)}")
+            else:
+                res.append(f"{self.__base[0]} {self.table} ({field}) {self.__base[1]} {','.join(tmp)}")
         self.set_sql(res)
 
 class Update(TUpdate):

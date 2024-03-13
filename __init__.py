@@ -2,7 +2,7 @@ import importlib
 import functools
 from . import db
 
-__version__ = '1.1.8'
+__version__ = '1.2.0'
 
 __cls__ = db.__all__
 
@@ -12,7 +12,7 @@ def SeniorDB(t):
         __db = getattr(db, t).DB
     else:
         __db = importlib.import_module(name = t).DB
-    
+
     class SeniorDB(__db):...
     return SeniorDB()
 
@@ -25,7 +25,7 @@ def SeniorSQL(o: SeniorDB):
         pack = importlib.import_module(name = t)
 
     class SeniorSQL(*[getattr(pack, i) for i in pack.__all__]):
-        
+
         def __init__(self):...
 
         def Add(self, *args, **kwargs):
@@ -39,7 +39,7 @@ def SeniorSQL(o: SeniorDB):
         def Up(self, *args, **kwargs):
             pack.Update.__init__(self, *args, **kwargs)
             self.func = 'Update'
-        
+
         def Sel(self, *args, **kwargs):
             pack.Select.__init__(self, *args, **kwargs)
             self.func = 'Select'
@@ -49,7 +49,7 @@ def SeniorSQL(o: SeniorDB):
             def f(self, *args, **kwargs):
                 return getattr(getattr(pack, self.func), func.__name__)(self, *args, **kwargs)
             return f
-        
+
         @__run_class_func
         def set_join(self, *args, **kwargs):...
 
@@ -58,7 +58,7 @@ def SeniorSQL(o: SeniorDB):
 
         @__run_class_func
         def set_group(self, *args, **kwargs):...
-        
+
         @__run_class_func
         def set_order(self, *args, **kwargs):...
 
