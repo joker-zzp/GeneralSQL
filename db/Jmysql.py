@@ -55,12 +55,7 @@ def _filter_format(filter_data:dict) -> str:
     if symbol == None: raise Error.ParamsError(400003, 'Params miss in [symbol, field, value]')
     if symbol not in symbol_list: raise Error.ParamsError(400004)
     symbol = symbol.upper()
-    # 关系逻辑处理
-    # factor = filter_data.get('factor', None)
-    # if factor and factor.upper() not in factor_list: raise Error.ParamsError(400004)
-    # if factor:
-    #     factor = factor.upper()
-    #     result += factor
+
     # 表 as 名称替换 field
     if filter_data.get('table_as'):
         field = f"{filter_data.get('table_as')}.`{field}`"
@@ -99,7 +94,7 @@ class SqlWhere:
         gl_index = []
         for i, v in enumerate(filters):
             if v.get('val_factor') and i > 0:
-                self.where[i - 1] += f' {v.get("val_factor")}{_filter_format(v)}'
+                self.where[-1] += f' {v.get("val_factor")}{_filter_format(v)}'
                 continue
             gl_index.append(i)
             self.where.append(_filter_format(v))
