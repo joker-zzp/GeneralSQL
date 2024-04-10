@@ -63,8 +63,7 @@ def _filter_format(filter_data:dict) -> str:
     #     result += factor
     # 表 as 名称替换 field
     if filter_data.get('table_as'):
-        field = f"{filter_data.get('table_as')}.{repr(field)}"
-
+        field = f"{filter_data.get('table_as')}.`{field}`"
 
     # 自定义 value 处理
     if filter_data.get('val_format'):
