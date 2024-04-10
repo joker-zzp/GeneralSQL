@@ -42,53 +42,79 @@ def _format_field(field):
 
 def _filter_format(filter_data:dict) -> str:
     # 检查
-    if set(filter_data.keys()) >= set(['symbol', 'field', 'value']):
-        # check symbol
-        field, val = f"{filter_data.get('field')}", filter_data.get('value')
-        symbol = filter_data.get('symbol')
+    if not set(filter_data.keys()) >= set(['symbol', 'field', 'value']): raise Error.ParamsError(400003, 'Params miss in [symbol, field, value]')
 
-        symbol_list = ['=', '<=', '>=', '!=', '<>', '<', '>', 'IN', 'LIKE', 'BETWEEN', 'ISNULL']
-        if symbol.upper() in symbol_list:
-            result = ''
-            # 表 as 名称替换 field
-            if filter_data.get('table_as'):
-                field = f"{filter_data.get('table_as')}.{field}"
-            # symbol 格式化
-            if symbol.upper() == 'IN':
-                if filter_data.get('not'):
-                    symbol = 'NOT IN'
-                result = f"{field} {symbol} ({','.join([repr(str(i)) for i in val])})"
-            elif symbol.upper() == 'LIKE':
-                if filter_data.get('not'):
-                    symbol = 'NOT LIKE'
-                result = f"{field} {symbol} {repr(f'{str(val)}')}"
-            elif symbol.upper() == 'ISNULL':
-                symbol = 'IS NULL'
-                if filter_data.get('not'):
-                    symbol = 'IS NOT NULL'
-                result = f'{field} {symbol}'
-            elif symbol.upper() == 'BETWEEN':
-                if filter_data.get('not'):
-                    symbol = 'NOT BETWEEN'
-                result = f'{field} {symbol} {repr(val.get("start"))} AND {repr(val.get("end"))}'
-                if filter_data.get('not'):
-                    symbol = 'NOT BETWEEN'
-                result = f'{field} {symbol} {repr(val.get("start"))} AND {repr(val.get("end"))}'
-            else:
-                result = f'{field} {symbol} {repr(val)}'
-                if filter_data.get('not'):
-                    result = f'NOT {result}'
-            # 关系
-            if factor := filter_data.get('factor'):
-                if factor.upper() in ['AND', 'OR']:
-                    result = f'{factor.upper()} {result}'
-                else:
-                    raise Error.ParamsError(400004)
-            return result
-        else:
-            raise Error.ParamsError(400004)
+    symbol_list = ['=', '<=', '>=', '!=', '<>', '<', '>', 'IN', 'LIKE', 'BETWEEN', 'ISNULL']
+    result = ''
+    factor_list = ['AND', 'OR', 'NOT']
+    # check symbol
+    symbol, field, val = str(filter_data.get('symbol')).upper(), f"{filter_data.get('field')}", filter_data.get('value')
+
+    # 条件逻辑处理
+    symbol:str = filter_data.get('symbol').upper()
+    if symbol == None: raise Error.ParamsError(400003, 'Params miss in [symbol, field, value]')
+    if symbol not in symbol_list: raise Error.ParamsError(400004)
+    symbol = symbol.upper()
+    # 关系逻辑处理
+    # factor = filter_data.get('factor', None)
+    # if factor and factor.upper() not in factor_list: raise Error.ParamsError(400004)
+    # if factor:
+    #     factor = factor.upper()
+    #     result += factor
+    # 表 as 名称替换 field
+    if filter_data.get('table_as'):
+        field = f"{filter_data.get('table_as')}.{repr(field)}"
+
+
+    # 自定义 value 处理
+    if filter_data.get('val_format'):
+        val = filter_data.get('val_format')(val)
     else:
-        raise Error.ParamsError(400003, 'Params miss in [symbol, field, value]')
+        # 默认 value 处理
+        if isinstance(val, (dict)) and val.get('start') and val.get('end'):
+            val = f'{repr(val.get("start"))} AND {repr(val.get("end"))}'
+        elif isinstance(val, (tuple, list)) and symbol == 'IN':
+            val = ','.join([repr(str(i)) for i in val])
+        else:
+            val = repr(val)
+
+    if symbol == 'ISNULL':
+        return f'{result} {symbol}({field})'
+    else:
+        return f'{result} {field} {symbol} ({val})'
+
+class SqlWhere:
+
+    def __init__(self):
+        self.where = []
+
+    # 设置条件
+    def set_where(self, *filters):
+        if len(filters) < 1: raise Error.ParamsError(400002)
+        self.where = []
+        factor_list = ['AND', 'OR', 'NOT']
+        filters = list(filter(lambda x: isinstance(x, dict), filters))
+        if isinstance(filters[0], dict) and filters[0].get('factor'):
+            filters[0].pop('factor')
+
+        gl_index = []
+        for i, v in enumerate(filters):
+            if v.get('val_factor') and i > 0:
+                self.where[i - 1] += f' {v.get("val_factor")}{_filter_format(v)}'
+                print(1, self.where[i - 1])
+                continue
+            gl_index.append(i)
+            self.where.append(_filter_format(v))
+        for i, v in enumerate(self.where):
+            if gl_index[i]:
+                if filters[gl_index[i]].get('factor', '').upper() in factor_list:
+                    tmp_factor = str(filters[gl_index[i]].get('factor', '')).upper()
+                    self.where[i] = f'{tmp_factor} ({v})'
+                else:
+                    raise Error.ParamsError(400003, 'factor not in ["AND", "OR", "NOT"]')
+            else:
+                self.where[i] = f'({v})'
+        self.where = f'WHERE {" ".join(self.where)}'
 
 class DB(TDB):
 
@@ -229,10 +255,11 @@ class Insert(TInsert):
                 res.append(f"{self.__base[0]} {self.table} ({field}) {self.__base[1]} {','.join(tmp)}")
         self.set_sql(res)
 
-class Update(TUpdate):
+class Update(TUpdate, SqlWhere):
 
     def __init__(self, table, data):
         TUpdate.__init__(self, table, data)
+        SqlWhere.__init__(self)
         self.__base = ['UPDATE', 'SET']
 
     def data_decode(self):
@@ -244,15 +271,6 @@ class Update(TUpdate):
         else:
             raise Error.UseError(200002)
 
-    def set_where(self, *filters):
-        if len(filters) > 0:
-            self.where = []
-            for i in filters:
-                self.where.append(_filter_format(i))
-            self.where = f'WHERE {" ".join(self.where)}'
-        else:
-            raise Error.ParamsError(400002)
-
     def format_sql(self):
         self.data_decode()
         str_data = ','.join(self.value)
@@ -261,20 +279,12 @@ class Update(TUpdate):
             sql = f'{sql} {self.where}'
         self.set_sql(sql)
 
-class Delete(TDelete):
+class Delete(TDelete, SqlWhere):
 
     def __init__(self, table):
         TDelete.__init__(self, table)
+        SqlWhere.__init__(self)
         self.__base = ['DELETE FROM']
-
-    def set_where(self, *filters):
-        if len(filters) > 0:
-            self.where = []
-            for i in filters:
-                self.where.append(_filter_format(i))
-            self.where = f'WHERE {" ".join(self.where)}'
-        else:
-            raise Error.ParamsError(400002)
 
     def format_sql(self):
         sql = f'{self.__base[0]} {self.table}'
@@ -282,10 +292,11 @@ class Delete(TDelete):
             sql = f'{sql} {self.where}'
         self.set_sql(sql)
 
-class Select(TSelect):
+class Select(TSelect, SqlWhere):
 
     def __init__(self, **kwargs):
         TSelect.__init__(self, **kwargs)
+        SqlWhere.__init__(self)
         self.__base = ['SELECT', 'FROM']
         if kwargs.get('fields'):
             if isinstance(kwargs.get('fields'), (list, tuple, dict)):
@@ -298,16 +309,6 @@ class Select(TSelect):
             raise Error.ParamsError(400002)
         for i in fields:
             self.fields = _format_field(i)
-
-    # 设置条件
-    def set_where(self, *filters):
-        if len(filters) > 0:
-            self.where = []
-            for i in filters:
-                self.where.append(_filter_format(i))
-            self.where = f'WHERE {" ".join(self.where)}'
-        else:
-            raise Error.ParamsError(400002)
 
     # 设置分组
     def set_group(self, *fields):
