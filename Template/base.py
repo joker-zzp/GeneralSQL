@@ -27,7 +27,7 @@ def filter_format(func, check: str, **kwargs) -> str:
     # 变量对照检查
     t = '{_logic} {_not} {_t_as:.}`{field}` {symbl} {value}'
     print(t)
-    return 
+    return
 
 """
 基本 模型
@@ -69,19 +69,19 @@ class Sql:
     """
 
     def __init__(self):
-        # type: query/ affairs
+        # query | affairs
         self.__type = None
         self.__value = None
 
     def get_sql(self):
         return self.__value
-    
+
     def set_sql(self, v):
         self.__value = v
-    
+
     def get_type(self):
         return self.__type
-    
+
     def set_type(self, t):
         self.__type = t
 
@@ -95,7 +95,7 @@ class Tab:
         # check 当对象没有该属性无法使用方法
         if not hasattr(self, 'where'):
             raise Error.UseError(200001)
-    
+
     def get_where(self):
         # check 当对象没有该属性无法获取
         if not hasattr(self, 'where'):
@@ -115,7 +115,7 @@ class Delete(Tab):
     def __init__(self):
         Tab.__init__(self)
         self.where = None
-    
+
     def get_where(self):
         Tab.get_where(self)
         return self.where
@@ -125,7 +125,7 @@ class Update(Tab):
     def __init__(self):
         Tab.__init__(self)
         self.where = None
-    
+
     def get_where(self):
         Tab.get_where(self)
         return self.where

@@ -86,12 +86,12 @@ def _filter_format(filter_data:dict) -> str:
 class SqlWhere:
 
     def __init__(self):
-        self.where = []
+        self.where = None
 
     # 设置条件
     def set_where(self, *filters):
-        if len(filters) < 1: raise Error.ParamsError(400002)
         self.where = []
+        if len(filters) < 1: raise Error.ParamsError(400002)
         factor_list = ['AND', 'OR', 'NOT']
         filters = list(filter(lambda x: isinstance(x, dict), filters))
         if isinstance(filters[0], dict) and filters[0].get('factor'):
@@ -101,7 +101,6 @@ class SqlWhere:
         for i, v in enumerate(filters):
             if v.get('val_factor') and i > 0:
                 self.where[i - 1] += f' {v.get("val_factor")}{_filter_format(v)}'
-                print(1, self.where[i - 1])
                 continue
             gl_index.append(i)
             self.where.append(_filter_format(v))
@@ -271,6 +270,9 @@ class Update(TUpdate, SqlWhere):
         else:
             raise Error.UseError(200002)
 
+    def set_where(self, *filters):
+        return SqlWhere.set_where(self, *filters)
+
     def format_sql(self):
         self.data_decode()
         str_data = ','.join(self.value)
@@ -285,6 +287,9 @@ class Delete(TDelete, SqlWhere):
         TDelete.__init__(self, table)
         SqlWhere.__init__(self)
         self.__base = ['DELETE FROM']
+
+    def set_where(self, *filters):
+        return SqlWhere.set_where(self, *filters)
 
     def format_sql(self):
         sql = f'{self.__base[0]} {self.table}'
@@ -309,6 +314,9 @@ class Select(TSelect, SqlWhere):
             raise Error.ParamsError(400002)
         for i in fields:
             self.fields = _format_field(i)
+
+    def set_where(self, *filters):
+        return SqlWhere.set_where(self, *filters)
 
     # 设置分组
     def set_group(self, *fields):
