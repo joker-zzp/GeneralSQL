@@ -1,18 +1,21 @@
 import importlib
 import functools
 from . import db
+from .Template import base
+from . import Error
 
-__version__ = '1.3.2'
+__version__ = '1.4.0'
 
 __cls__ = db.__all__
 
 
-def SeniorDB(t):
+def SeniorDB(t, pack = db):
     if t in __cls__:
-        __db = getattr(db, t).DB
+        __db = getattr(pack, t).DB
     else:
-        __db = importlib.import_module(name = t).DB
-
+        __db = importlib.import_module(name = t, package = pack).DB
+    if not issubclass(__db, base.DB):
+        raise Error.FormatError(300001, 'Not a subclass of base.DB')
     class SeniorDB(__db):...
     return SeniorDB()
 

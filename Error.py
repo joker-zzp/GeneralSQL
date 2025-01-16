@@ -15,8 +15,8 @@ message = {
     100002: 'Database conf params error.',
     # 数据库 连接失败
     100010: 'Database connection failed.',
-    # 数据库 无法连接mysql服务
-    100011: 'Can\'t connect to MySQL server.',
+    # 数据库 无法连接 数据库服务
+    100011: 'Can\'t connect to DB server.',
     # 数据库 连接超时
     100012: 'Database connection timeout.',
     # 执行 sql 异常
@@ -33,18 +33,18 @@ message = {
     200001: 'This object cannot use this method.',
     # 对象没有这个属性
     200002: 'The object dost not have the attribute.',
-  
+
     # 方法运行异常
     # 模板格式化错误
     300001: 'Template format error.',
     # 输入异常
-    
+
     # 参数异常
     400001: 'Params type error.',
     400002: 'Params miss.',
     400003: 'Params format error.',
     400004: 'Params value error.',
-    
+
     # 输出异常
     # 结果处理异常
     500000: 'Result processing error.',
@@ -58,7 +58,7 @@ class BaseError(Exception):
         self.msg = message.get(self.code)
         self.res = Exception(*args)
         self.__str__()
-    
+
     def __str__(self):
         return f'[{self.code:0>6}] [{self.__class__.__name__}] -> {self.msg}\nErrorMessage: {self.res}'
 

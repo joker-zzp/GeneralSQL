@@ -46,7 +46,7 @@ def _filter_format(filter_data:dict) -> str:
 
     symbol_list = ['=', '<=', '>=', '!=', '<>', '<', '>', 'IN', 'LIKE', 'BETWEEN', 'ISNULL']
     result = ''
-    factor_list = ['AND', 'OR', 'NOT']
+    # factor_list = ['AND', 'OR', 'NOT']
     # check symbol
     symbol, field, val = str(filter_data.get('symbol')).upper(), f"{filter_data.get('field')}", filter_data.get('value')
 
@@ -327,7 +327,7 @@ class Select(TSelect, SqlWhere):
             if f_list:
                 self.group = 'GROUP BY {}'.format(','.join(f_list))
         else:
-            raise Error.ParamMiss('fields')
+            raise Error.ParamsError(400002)
 
     # 设置排序
     def set_order(self, **fields):

@@ -29,6 +29,7 @@ def filter_format(func, check: str, **kwargs) -> str:
     print(t)
     return
 
+
 """
 基本 模型
 
@@ -51,16 +52,32 @@ class DB:
         self.db_info = None
         self.__db = None
 
+    def run(self):
+        """执行 sql"""
+        raise NotImplementedError
+
     def set_conf(self):
+        """设置数据库配置"""
         raise NotImplementedError
 
     def get_conf(self):
+        """获取数据库配置"""
         return self.db_info
 
     def connect(self):
+        """连接数据库"""
+        raise NotImplementedError
+
+    def commit(self):
+        """提交事务"""
+        raise NotImplementedError
+
+    def rollback(self):
+        """回滚事务"""
         raise NotImplementedError
 
     def close(self):
+        """关闭数据库连接"""
         raise NotImplementedError
 
 
@@ -136,6 +153,7 @@ class Select(Tab):
         Tab.__init__(self)
         self.fields = []
         self.join = None
+        self.data = None
         self.where = None
         self.group = None
         self.order = None
